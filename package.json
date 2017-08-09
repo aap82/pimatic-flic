@@ -12,10 +12,6 @@
     "README.md"
 
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/aap82/pimatic-flic.git"
-  },
   "keywords": [
     "pimatic",
     "flic"
