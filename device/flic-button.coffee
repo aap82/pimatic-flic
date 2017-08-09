@@ -40,8 +40,8 @@ module.exports = (env) ->
         @listener.on 'buttonUpOrDown', @buttonPressed
       if @buttons['ButtonSingleClick']? or @buttons['ButtonDoubleClick'] or @buttons['ButtonHold']
         @listener.on 'buttonSingleOrDoubleClickOrHold', @buttonPressed
-      if @daemon.debug
-        @listener.on "connectionStatusChanged", @connectionStatusChanged
+#      if @daemon.debug
+#        @listener.on "connectionStatusChanged", @connectionStatusChanged
       @listener.on 'removed', @handleRemoved
       return
 
@@ -52,8 +52,6 @@ module.exports = (env) ->
 
     buttonPressed: (clickType, wasQueued, timeDiff) =>
       return unless timeDiff <= @maxTimeDiff and @buttons[clickType]?
-      if @daemon.debug
-        env.logger.info("Flic Button #{@id}: #{clickType} occured #{timeDiff} seconds ago" )
       @_lastPressedButton = @buttons[clickType]
       @emit 'button', @buttons[clickType]
       return
