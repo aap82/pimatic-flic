@@ -1,0 +1,32 @@
+{
+  "name": "pimatic-flic",
+  "version": "0.1.0",
+  "description": "Pimatic Plugin for Flic Buttons",
+  "main": "flic",
+  "configSchema": "flic-config-schema.coffee",
+  "files": [
+    "flic.coffee",
+    "flic-config-schema.coffee",
+    "device/flic-button.coffee",
+    "lib",
+    "README.md"
+
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aap82/pimatic-flic.git"
+  },
+  "keywords": [
+    "pimatic",
+    "flic"
+  ],
+  "author": "aap82",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aap82/pimatic-flic/issues"
+  },
+  "homepage": "https://github.com/aap82/pimatic-flic#readme",
+  "dependencies": {
+    "param-case": "^2.1.1"
+  }
+}
