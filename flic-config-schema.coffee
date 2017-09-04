@@ -3,6 +3,18 @@ module.exports =
   title: "Flic Plugin Config Options"
   type: "object"
   properties:
+    debug:
+      description: "Launch plugin in debug mode"
+      type: "boolean"
+      default: true
+    clean:
+      description:
+          """
+      Enabling will execute ssh command to remove the flic button database and restart the service.
+      Assumes the login is pi, the path to file is ~/flic/flic.flic.sqlite3 and service name is flicd.service
+                """
+      type: "boolean"
+      default: false
     defaultLatencyMode:
       description: "Default latency for connection to buttons"
       type: "string"
@@ -57,9 +69,3 @@ module.exports =
             description: "Maximum number of retries to connect"
             type: "number"
             default: 1000
-
-      debug:
-        description: "Launch plugin in debug mode"
-        type: "boolean"
-        default: true
-

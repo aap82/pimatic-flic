@@ -25,10 +25,12 @@ module.exports =
   FlicButton:
     title: "Flic Button"
     type: "object"
+    extensions: ["xAttributeOptions"]
     properties:
       daemon:
         description:  "Daemon this Button is connected to"
         type: "string"
+        default: 'none'
         required: yes
         enum: ['']
       hwAddress:
@@ -74,6 +76,9 @@ module.exports =
             include:
               description: "Listen for this Press Type"
               type: "boolean"
+            hidden:
+              type: "boolean"
+
 
 
 

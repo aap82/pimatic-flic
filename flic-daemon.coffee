@@ -14,13 +14,12 @@ module.exports = (env) ->
       return unless type in ['error', 'info', 'warn']
       return env.logger[type] "daemon: #{@id}: #{msg}"
 
-    constructor: (@id, @config, @plugin) ->
+    constructor: (@id, @config, @flic) ->
       {@name} = @config
-      @defaultLatencyMode = @config.defaultLatencyMode? or @plugin.defaultLatencyMode
+      @defaultLatencyMode = @config.defaultLatencyMode? or @flic.defaultLatencyMode
       @debug = @config.debug or yes
       @client = null
       @connected = false
-      @flicDevices = []
       @bdAddrOfVerifiedButtons = []
       @bluetoothControllerState = null
       @currentlyNoSpaceForNewConnection = false
@@ -40,27 +39,25 @@ module.exports = (env) ->
       @client.on 'newVerifiedButton', @handleNewVerifiedButton
       return
 
-    createButton: (config) =>
-      if @plugin.buttonExists(config.hwAddress)
-        throw new Error("Button with hwAddr of #{@config.hwAddress} already exists")
-      button = new FlicButton(config, @)
-      @flicDevices.push button
-      @addFlicButtonConnectionChannel(button) if config.hwAddress in @bdAddrOfVerifiedButtons
-      return button
-
-
     handleConnect: =>
       @connected = yes
       @getFlicDaemonInfo(@client).then =>
-        @addFlicButtonConnectionChannel(button) for button in @flicDevices
+        for hwAddress, button of @flic.buttons
+          if button.daemon is @id and hwAddress not in @bdAddrOfVerifiedButtons
+            button.config.daemon = 'none'
+            button.daemon = 'none'
+          if button.daemon isnt @id and hwAddress in @bdAddrOfVerifiedButtons
+            button.config.daemon = @id
+            button.daemon = @id
+          @addFlicButtonConnectionChannel(button) if button.daemon is @id
+
         return Promise.resolve(@client)
 
     handleDisconnect: =>
       errMsg = "Disconnected from flic daemon."
-      console.log @config
       @client = null
       @connected = no
-      flicDev.listening = no for flicDev in @flicDevices
+      button.listening = no for addr, button of @flic.buttons
       if @config.autoReconnect and @retryCount <= @config.maxRetries
         @retryCount++
         @reconnectTimeout = setTimeout (()=> @connect()), @config.autoReconnectInterval * 1000
@@ -72,8 +69,11 @@ module.exports = (env) ->
     handleNewVerifiedButton: (hwAddress) =>
       @printDebugMsg 'info', "Button #{hwAddress} successfully connected"
       @bdAddrOfVerifiedButtons.push hwAddress if hwAddress not in @bdAddrOfVerifiedButtons
-      for flic in @flicDevices when hwAddress is flic.hwAddress
-        @addFlicButtonConnectionChannel(flic)
+      button = @flic.buttons[hwAddress]
+      if button?
+        button.daemon = @id
+        button.config.daemon = @id
+        @addFlicButtonConnectionChannel(button)
       return
 
     handleBluetoothControllerStateChange: (state) => @bluetoothControllerState = state
@@ -83,24 +83,25 @@ module.exports = (env) ->
       return unless @client? and @connected
       return if button.hwAddress not in @bdAddrOfVerifiedButtons
       return if button.listening
-      return if button.buttons is {}
       @printDebugMsg 'info', "Adding Connection Channel for #{button.id} to flic-client"
       cc = new FlicConnectionChannel(button.hwAddress, button.connectionOptions)
       @client.addConnectionChannel(cc)
       button.listen(cc)
       return button
 
+    removeFlicButtonConnectionChannel: (button) =>
+      @printDebugMsg 'info', "Removing Connection Channel for #{button.id} to flic-client"
+      @client.removeConnectionChannel(button.listener)
+      button.daemon = 'none'
+      return button
+
+
+
     getFlicDaemonInfo: (client) =>
       return new Promise (resolve) =>
         client.getInfo (info) =>
-          console.log info
           {@bdAddrOfVerifiedButtons, @currentlyNoSpaceForNewConnection, @bluetoothControllerState} = info
           return resolve(client)
-
-    destroyButton: (button) =>
-      @client.removeConnectionChannel(button.listener) if button.listening
-      @flicDevices.splice(@flicDevices.indexOf(button),1)
-      return
 
     startScan: =>
       return if @scanning

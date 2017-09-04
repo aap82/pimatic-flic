@@ -14,18 +14,22 @@ module.exports = (env) ->
 
   class FlicButton extends env.devices.ButtonsDevice
     _connection_status: null
-    getConnection_status: -> Promise.resolve(@_connection_status)
-    getButton: -> Promise.resolve(@_lastPressedButton)
-    attributes: ->
+    attributes:
       connection_status:
         description: "Button Connection Status"
+        label: "Status"
         type: "string"
+    getConnection_status: -> Promise.resolve(@_connection_status)
 
-    constructor: (@config, @daemon)->
-      {@id, @name, @hwAddress, @maxTimeDiff, @connectionOptions} = @config
-      if @config.buttons.length is 0
-        @config.buttons = createButtons(@id)
+
+    constructor: (@config, @flic)->
+      {@id, @daemon, @name, @hwAddress, @maxTimeDiff, @connectionOptions} = @config
+
+
+
       super(@config)
+      console.log "daemon"
+      console.log @daemon
       @buttons = {}
       @buttons[b.text] = b.id for b in @config.buttons when b.include
       @listening = no
@@ -40,18 +44,20 @@ module.exports = (env) ->
         @listener.on 'buttonUpOrDown', @buttonPressed
       if @buttons['ButtonSingleClick']? or @buttons['ButtonDoubleClick'] or @buttons['ButtonHold']
         @listener.on 'buttonSingleOrDoubleClickOrHold', @buttonPressed
-#      if @daemon.debug
-#        @listener.on "connectionStatusChanged", @connectionStatusChanged
+      #      if @daemon.debug
+      #        @listener.on "connectionStatusChanged", @connectionStatusChanged
       @listener.on 'removed', @handleRemoved
       return
 
     handleRemoved: (reason) =>
+      console.log reason
       return if reason is 'RemovedByThisClient'
       @listening = false
       return
 
     buttonPressed: (clickType, wasQueued, timeDiff) =>
       return unless timeDiff <= @maxTimeDiff and @buttons[clickType]?
+      console.log clickType, wasQueued, timeDiff
       @_lastPressedButton = @buttons[clickType]
       @emit 'button', @buttons[clickType]
       return
@@ -64,7 +70,7 @@ module.exports = (env) ->
 
 
     destroy: () =>
-      @daemon.destroyButton(@)
+      @flic.destroyButton(@)
       super()
 
 
