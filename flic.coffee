@@ -3,11 +3,11 @@ module.exports = (env) ->
   Promise = env.require 'bluebird'
   assert = env.require 'cassert'
   paramCase = require 'param-case'
+  {FlicConnectionChannel} = require("./lib/fliclibNodeJs")
   FlicDaemon = require('./flic-daemon')(env)
   FlicButton = require('./device/flic-button')(env)
   {FlicScanWizardButton, flicScanWizardConfig} = require('./device/flic-scanwizard')(env)
   FlicButtonPredicateProvider = require('./predicates/flic-predicates')(env)
-
 
   checkConfig = (config) ->
     ids = []
@@ -60,24 +60,27 @@ module.exports = (env) ->
     createButtonCallback: (classType) =>
       return (config) =>
         {id, bdAddr, daemonID} = config
-        daemon = @daemons[daemonID]
         if daemonID not in _.keys(@daemons)
           throw new Error "#{daemonID} is an unknown daemon client"
-        if bdAddr not in daemon.verifiedButtons
-          throw new Error "bdAddr #{bdAddr} not verified on #{daemon.name} daemon"
+        if bdAddr not in @daemons[daemonID].verifiedButtons
+          throw new Error "bdAddr #{bdAddr} not verified on #{@name} daemon"
 
-        dev = @devices[id]
-        if dev?
-          if dev.daemonID isnt daemonID
-            console.log 'deleting'
-            @daemons[dev.daemonID]?.disconnectButton bdAddr
+#        dev = @devices[id]
+#        if dev?
+#          if dev.daemonID isnt daemonID
+#
+#            delete @devices[id]
+#          oldDaemonId = @daemons[dev.d].daemonID
+#          @daemons[oldDaemonId].disconnectButton bdAddr
+##
+##          delete @devices[id]
 
+        cc = @channels[bdAddr] or new FlicConnectionChannel(bdAddr)
 
-        cc = daemon.createChannel bdAddr
         button = new classType(config, @, cc)
-        @daemons[daemonID]?.connectButton(bdAddr)
         @channels[bdAddr] = cc
         @devices[id] = button
+        @daemons[daemonID]?.connectButton(bdAddr)
         return button
 
     deviceRemoved: (device) =>
@@ -88,12 +91,12 @@ module.exports = (env) ->
 
     newVerifiedFlic: (daemonID, bdAddr) =>
       device = @getDeviceByAddr(bdAddr)
+      daemon.disconnectButton(bdAddr) for id, daemon of @daemons when id isnt daemonID
       if device?
         device.daemonID = daemonID
         @framework.deviceManager.recreateDevice(device, device.config)
       return
     discover: =>
-      console.log @daemons['living-room'].channels
       return new Promise (resolve) =>
         createdFlics = (btn.bdAddr for key, btn of @devices)
         for key, d of @daemons

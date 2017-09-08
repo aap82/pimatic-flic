@@ -1,6 +1,6 @@
 module.exports = (env) ->
   Promise = env.require 'bluebird'
-  {FlicClient, FlicScanWizard, FlicConnectionChannel} = require("./lib/fliclibNodeJs")
+  {FlicClient, FlicScanWizard} = require("./lib/fliclibNodeJs")
 
   class FlicDaemon
     createdButtons: => (btn.bdAddr for id, btn of @flic.devices when btn.daemonID is @id)
@@ -22,7 +22,6 @@ module.exports = (env) ->
       @client.on 'ready', =>
         @connected = yes
         @flic.logInfo "#{@name} daemon connected"
-        @flic.logInfo "#{@name} WHAT WHAT"
         @client.getInfo (info) =>
           @verifiedButtons = info.bdAddrOfVerifiedButtons
           @spaceAvailable = !info.currentlyNoSpaceForNewConnection
@@ -46,8 +45,7 @@ module.exports = (env) ->
       @name = @config.name
       @host = @config.host
       @client = null
-      @channels = {}
-      @connections = []
+      @channels = []
       @connected = no
       @spaceAvailable = yes
       @controllerState = null
@@ -55,28 +53,24 @@ module.exports = (env) ->
 
     connectButton: (bdAddr) =>
       return unless @client? and @connected
-      if @channels[bdAddr]?
-        @client.addConnectionChannel @channels[bdAddr]
-        @connections.push bdAddr if bdAddr not in @connections
+      if @flic.channels[bdAddr]?
+        @client.addConnectionChannel @flic.channels[bdAddr]
+        @channels.push bdAddr if bdAddr not in @channels
       return null
 
 
     disconnectButton: (bdAddr) =>
       return unless @client?
-      if @channels[bdAddr]?
-        'removing'
-        @client.removeConnectionChannel @channels[bdAddr]
-        @connections.remove(bdAddr)
+      if @flic.channels[bdAddr]?
+        @client.removeConnectionChannel @flic.channels[bdAddr]
+        @channels.remove(bdAddr)
       return null
-    createChannel: (bdAddr) =>
-      @channels[bdAddr] ?= new FlicConnectionChannel(bdAddr)
-      @channels[bdAddr]
 
     scan: (timeout = 30000) =>
-#      daemon.client?.close() for id, daemon of @flic.daemons when id isnt @id
       return new Promise (resolve, reject) =>
         return reject("Not connected to #{@name} daemon. Try again later") unless @client and @connected
         return reject("#{@name} daemon already scanning") if @scanning
+        daemon.client?.close() for id, daemon of @flic.daemons when id isnt @id
         @flic.logInfo "#{@name} daemon scan wizard ready.  Press your Flic button to add it."
         @scanning = yes
         wizard = new FlicScanWizard()
