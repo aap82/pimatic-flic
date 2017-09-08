@@ -1,10 +1,9 @@
 module.exports = (env) ->
   Promise = env.require 'bluebird'
-  {FlicClient, FlicScanWizard} = require("./lib/fliclibNodeJs")
+  {FlicClient, FlicScanWizard, FlicConnectionChannel} = require("./lib/fliclibNodeJs")
 
   class FlicDaemon
-    @property 'createdButtons',
-      get: -> (btn.bdAddr for id, btn of @flic.devices when btn.daemonID is @id)
+    createdButtons: => (btn.bdAddr for id, btn of @flic.devices when btn.daemonID is @id)
     @property 'verifiedButtons',
       get: -> @config.verifiedButtons
       set: (btns) -> @config.verifiedButtons = btns
@@ -23,18 +22,17 @@ module.exports = (env) ->
       @client.on 'ready', =>
         @connected = yes
         @flic.logInfo "#{@name} daemon connected"
+        @flic.logInfo "#{@name} WHAT WHAT"
         @client.getInfo (info) =>
-          console.log @name, info.bdAddrOfVerifiedButtons, info.currentlyNoSpaceForNewConnection
-
           @verifiedButtons = info.bdAddrOfVerifiedButtons
           @spaceAvailable = !info.currentlyNoSpaceForNewConnection
           @controllerState = info.bluetoothControllerState
-          console.log @name, @verifiedButtons, @createdButtons
-          @connectButton(bdAddr) for bdAddr in @createdButtons
+          console.log @name, @verifiedButtons, @createdButtons()
+          @connectButton(bdAddr) for bdAddr in @createdButtons()
       @client.on 'close', (errSt) =>
         @flic.logWarn("#{@name} daemon client connection to flic server closed")
         @client = null
-        @channels = []
+        @connections = []
         @connected = no
         if @config.autoReconnect and @retryCount < @config.maxRetries
           console.log 'reconnecting'
@@ -48,31 +46,34 @@ module.exports = (env) ->
       @name = @config.name
       @host = @config.host
       @client = null
-      @channels = []
+      @channels = {}
+      @connections = []
       @connected = no
       @spaceAvailable = yes
       @controllerState = null
       @connectToDaemon()
 
-    connectButton: (bdAddr, cc=null) =>
+    connectButton: (bdAddr) =>
       return unless @client? and @connected
-      cc = @flic.channels[bdAddr] unless cc?
-
-      if cc and bdAddr not in @channels
-        console.log 'connecting', @name, bdAddr
-        @channels.push bdAddr
-        @client.addConnectionChannel cc
+      if @channels[bdAddr]?
+        @client.addConnectionChannel @channels[bdAddr]
+        @connections.push bdAddr if bdAddr not in @connections
       return null
 
-    disconnectButton: (bdAddr, cc=null) =>
 
+    disconnectButton: (bdAddr) =>
       return unless @client?
-      if @flic.channels[bdAddr]?
-        @channels.remove(bdAddr)
-        @client.removeConnectionChannel @flic.channels[bdAddr]
+      if @channels[bdAddr]?
+        'removing'
+        @client.removeConnectionChannel @channels[bdAddr]
+        @connections.remove(bdAddr)
       return null
+    createChannel: (bdAddr) =>
+      @channels[bdAddr] ?= new FlicConnectionChannel(bdAddr)
+      @channels[bdAddr]
 
     scan: (timeout = 30000) =>
+#      daemon.client?.close() for id, daemon of @flic.daemons when id isnt @id
       return new Promise (resolve, reject) =>
         return reject("Not connected to #{@name} daemon. Try again later") unless @client and @connected
         return reject("#{@name} daemon already scanning") if @scanning
