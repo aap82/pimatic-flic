@@ -1,13 +1,7 @@
-
 module.exports =
   title: "Flic Plugin Config Options"
   type: "object"
   properties:
-    defaultLatencyMode:
-      description: "Default latency for connection to buttons"
-      type: "string"
-      default: "HighLatency"
-      enum: ["HighLatency", "NormalLatency", "LowLatency"]
     daemons:
       description: "List of Flic Daemons"
       type: "array"
@@ -23,43 +17,41 @@ module.exports =
           autoReconnect: yes
           autoReconnectInterval: 30
           maxRetries: 1000
+          buttons: []
         properties:
           name:
             description: "Unique Name of this daemon"
             type: "string"
             required: yes
+            unique: yes
           host:
             description: "Host address for Flic service"
             type: "string"
-            default: "localhost"
             required: yes
           port:
             description: "Port number for Flic service"
             type: "number"
-            default: 5551
             required: yes
-          defaultLatencyMode:
-            description: "Default latency for connection to buttons"
-            type: "string"
-            default: ""
-            enum: ["", "HighLatency", "NormalLatency", "LowLatency"]
           autoReconnect:
             description: "Auto reconnect to daemon after disconnect."
             type: "boolean"
-            default: true
             required: yes
           autoReconnectInterval:
-            description: "Auto reconnect interval period"
+            description: "Auto reconnect interval period in seconds"
             type: "number"
-            default: 60
             required: yes
           maxRetries:
             description: "Maximum number of retries to connect"
             type: "number"
-            default: 1000
+          verifiedButtons:
+            description: "This will be used to store buttons belonging to daemon"
+            type: "array"
+            items:
+              type: "string"
+          id:
+            description: "An param-case id will be assigned from name if not provided"
+            type: "string"
 
-      debug:
-        description: "Launch plugin in debug mode"
-        type: "boolean"
-        default: true
+
+
 

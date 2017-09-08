@@ -1,131 +1,111 @@
 module.exports = (env) ->
+  _ = require './utils'
   Promise = env.require 'bluebird'
+  assert = env.require 'cassert'
   paramCase = require 'param-case'
+  {FlicConnectionChannel} = require("./lib/fliclibNodeJs")
+  FlicDaemon = require('./flic-daemon')(env)
+  FlicButton = require('./device/flic-button')(env)
+  {FlicScanWizardButton, flicScanWizardConfig} = require('./device/flic-scanwizard')(env)
+  FlicButtonPredicateProvider = require('./predicates/flic-predicates')(env)
 
-  FlicDaemonClient = require('./flic-daemon')(env)
-
-
-  createDeviceSchema = (daemons, config) ->
-    config.properties.daemon.enum = ("#{daemon.id}" for id, daemon of daemons)
+  checkConfig = (config) ->
+    ids = []
+    hosts = []
+    for d in config.daemons
+      assert d.name?
+      d.id = paramCase(d.name)
+      if d.id in ids
+        throw new Error "Duplicate daemon id #{d.id}"
+      if d.host in hosts
+        throw new Error "Duplicate host address #{d.host}"
+      ids.push d.id
+      hosts.push d.host
     return config
 
-
   class FlicPlugin extends env.plugins.Plugin
-    printDebugMsg: (type,msg) =>
-      return unless @config.debug
-      return unless type in ['error', 'info', 'warn']
-      return env.logger[type] "Flic Plugin: #{msg}"
-
+    prepareConfig: (config) -> return checkConfig(config)
+    getDeviceByAddr: (bdAddr) =>
+      for id, btn of @devices when btn.bdAddr is bdAddr
+        return btn
+      return null
 
     init: (app, @framework, @config) =>
+      return unless @config.daemons.length > 0
+      @devices = {}
+      @channels = {}
       @daemons = {}
-      if @config.daemons is []
-        env.logger.info "Flig Plugin: No daemons provided"
-        return
-      else
-        for daemon,i in @config.daemons
-          if daemon.defaultLatencyMode is ""
-            @config.daemons[i].defaultLatencyMode = @config.defaultLatencyMode
-
-      daemonHosts = []
-      for daemon in @config.daemons
-        id = paramCase(daemon.name)
-        if @daemons[id]?
-          env.logger.error "Flig Plugin: Daemon #{name} listed twice.  Daemon Ids must be unique.  Exiting..."
-          return
-        if daemon.host in daemonHosts
-          env.logger.error "Flig Plugin: Daemon Host #{daemon.host} listed twice.  Daemon Hosts must be unique.  Exiting..."
-          return
-
-        daemonHosts.push daemon.host
-        @daemons[id] = new FlicDaemonClient(id, daemon, @)
-
-
-
-      createScanWizardButton = yes
-      for dev in @framework.deviceManager.devicesConfig when dev.class is 'FlicScanWizard'
-        createScanWizardButton = no
-
-      if createScanWizardButton
-        @framework.deviceManager.devicesConfig.push {
-          class: 'FlicScanWizard'
-          id: 'flic-scan-wizard'
-          name: "Flic Scan Wizard"
-
-
-        }
-
+      @daemons[d.id] = new FlicDaemon(d, @) for d in @config.daemons
+      unless @framework.deviceManager.isDeviceInConfig('flic-scan-wizard')
+        @framework.deviceManager.addDeviceToConfig flicScanWizardConfig
 
 
       deviceConfigDef = require('./device-config-schema')
-      @framework.deviceManager.registerDeviceClass "FlicButton", {
-        configDef: createDeviceSchema @daemons, deviceConfigDef.FlicButton
-        createCallback: (config) =>
-          return @daemons[config.daemon].createButton(config)
+      deviceConfigDef.FlicButton.properties.daemonID.enum = _.keys(@daemons)
 
+      @framework.deviceManager.registerDeviceClass "FlicButton", {
+        configDef: deviceConfigDef.FlicButton
+        createCallback: @createButtonCallback(FlicButton)
       }
       @framework.deviceManager.registerDeviceClass "FlicScanWizard", {
-          configDef: deviceConfigDef.FlicScanWizardButton
-          createCallback: (config) =>
-            return new FlicScanWizardButton(config, @daemons)
+        configDef: deviceConfigDef.FlicScanWizardButton
+        createCallback: ((config) => return new FlicScanWizardButton(config, @daemons))
+      }
 
-    }
-
-
-
+      @framework.ruleManager.addPredicateProvider(new FlicButtonPredicateProvider(@framework))
+      @framework.deviceManager.on "deviceRemoved", @deviceRemoved
       @framework.deviceManager.on "discover", @discover
-      @daemons[key].connect() for key, daemon of @daemons
 
+
+    createButtonCallback: (classType) =>
+      return (config, lastState) =>
+        {id, bdAddr, daemonID} = config
+        if daemonID not in _.keys(@daemons)
+          throw new Error "#{daemonID} is an unknown daemon client"
+        if bdAddr not in @daemons[daemonID].verifiedButtons
+          throw new Error "bdAddr #{bdAddr} not verified on #{@name} daemon"
+        cc = @channels[bdAddr] or new FlicConnectionChannel(bdAddr)
+        button = new classType(config, @, cc, lastState)
+        @channels[bdAddr] = cc
+        @devices[id] = button
+        @daemons[daemonID]?.connectButton(bdAddr)
+        return button
+
+    deviceRemoved: (device) =>
+      return unless device.config.class is 'FlicButton'
+      @daemons[device.daemonID]?.disconnectButton(device.bdAddr)
+      delete @devices[device.id]
+      return
+
+    newVerifiedFlic: (daemonID, bdAddr) =>
+      device = @getDeviceByAddr(bdAddr)
+      daemon.disconnectButton(bdAddr) for id, daemon of @daemons when id isnt daemonID
+      if device?
+        device.daemonID = daemonID
+        @framework.deviceManager.recreateDevice(device, device.config)
+      return
     discover: =>
       return new Promise (resolve) =>
-        createdFlics = (dev.hwAddress for dev in @framework.deviceManager.devicesConfig when dev.class is 'FlicButton')
-        newButtons = {}
-        for key, daemon of @daemons
-          console.log daemon.bdAddrOfVerifiedButtons, key
-          for id in daemon.bdAddrOfVerifiedButtons when id not in createdFlics
-            if not @buttonExists(id)
-              newButtons[id] = switch
-                when newButtons[id]? then null
-                else key
-        for id, daemonName of newButtons
-          latency = if daemonName is null then @config.defaultLatencyMode else @daemons[daemonName].defaultLatencyMode
-          config =
-            class: "FlicButton"
-            hwAddress: id
-            connectionOptions:
-              latencyMode:  latency
-          if daemonName? then config.daemon = daemonName
-          @framework.deviceManager.discoveredDevice 'pimatic-flic', "Flic Button: #{id}", config
+        createdFlics = (btn.bdAddr for key, btn of @devices)
+        for key, d of @daemons
+          for bdAddr in d.discover(createdFlics)
+            config = {
+              daemonID: d.id
+              class: "FlicButton"
+              bdAddr
+            }
+            @framework.deviceManager.discoveredDevice 'pimatic-flic', "#{d.name} daemon: #{bdAddr}", config
         return resolve()
 
-    buttonExists: (hwAddress) =>
-      exists = no
-      for key, daemon of @daemons
-        for button in daemon.flicDevices when button.hwAddress is hwAddress
-          exists = yes
-          return exists
-      return exists
-
-
-
+    logInfo: (str) -> env.logger.info "Flig Plugin: #{str}"
+    logWarn: (str) -> env.logger.warn "Flig Plugin: #{str}"
+    logDebug: (str) -> env.logger.debug "Flig Plugin: #{str}"
+    logError: (str) -> env.logger.error "Flic Plugin: #{str}"
+    connError: ({id, host, port}, error) =>
+      if error? and error.code is 'ECONNREFUSED'
+        env.logger.error "Flic: daemon #{id} connection failed to #{host}:#{port}"
+      else
+        env.logger.error "Flic: daemon #{id} connection error: #{error}"
 
   flicPlugin = new FlicPlugin()
-
-  class FlicScanWizardButton extends env.devices.ButtonsDevice
-    constructor: (@config, @daemons) ->
-      if @config.id isnt 'flic-scan-wizard'
-        throw new Error("Invalid id")
-      @id = @config.id
-      @name = @config.name
-      @config.buttons = ({text: daemon.config.name, id: key} for key, daemon of @daemons)
-      super @config
-
-    buttonPressed: (id) =>
-      return unless @daemons[id]?
-      @daemons[id].startScan()
-      return Promise.resolve()
-
-
-
-
   return flicPlugin
