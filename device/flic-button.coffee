@@ -13,10 +13,12 @@ module.exports = (env) ->
       set: (id) -> @config.daemonID = id
 
     _connection_status: null
-    constructor: (@config, @flic, @channel, isNew=false) ->
+    constructor: (@config, @flic, @channel, lastState) ->
+      @_connection_status = lastState?.connection_status?.value or null
       @id = @config.id
       @name = @config.name
       super()
+      @upDown = @config.upDown
       @bdAddr = @config.bdAddr
       @maxTimeDiff = @config.maxTimeDiff
       @buttons =
@@ -33,17 +35,14 @@ module.exports = (env) ->
       @channel.on 'buttonSingleOrDoubleClickOrHold', @flicPressed
       @channel.on 'buttonUpOrDown', @flicPressed if @upDown
       @channel.on 'connectionStatusChanged', @connectionStatusChanged
-      @channel.on 'removed', @removed
+
       return null
     unListen: =>
       @channel.removeListener 'buttonSingleOrDoubleClickOrHold', @flicPressed
       @channel.removeListener 'buttonUpOrDown', @flicPressed if @upDown
       @channel.removeListener 'connectionStatusChanged', @connectionStatusChanged
-      @channel.removeListener 'removed', @removed
+
       return null
-    removed: (reason) =>
-      console.log @daemonID, @id, reason
-      return
 
     flicPressed: (clickType, wasQueued, timeDiff) =>
       return unless  @buttons[clickType]?
@@ -52,10 +51,14 @@ module.exports = (env) ->
       @emit @buttons[clickType]
 
     connectionStatusChanged: (status, reason) =>
-      console.log @daemonID, @id, status, reason
-      @_connection_status = status
-      @emit 'connection_status', status
-      return null
+      state = if status is 'Ready'
+          'Ready'
+        else if reason is "BondingKeysMismatch" or
+        @_connection_status is "BondingKeysMismatch"
+            'Press and Hold'
+        else status
+      @_connection_status = state
+      @emit 'connection_status', state
 
     destroy: () ->
       @unListen()

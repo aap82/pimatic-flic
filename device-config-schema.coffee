@@ -51,25 +51,3 @@ module.exports =
                 description: 'Button Id'
                 type: 'string'
                 default: ''
-  FlicDisconnectButton:
-    title: "FlicDisconnectButton"
-    type: "object"
-    properties:
-      buttons:
-        description: "Flic Buttons to Disconnect"
-        type: "array"
-        default: []
-        format: "table"
-        items:
-          type: "object"
-          properties:
-            id:
-              description: 'Button Id'
-              type: 'string'
-              default: ''
-            text:
-              description: 'Button Id'
-              type: 'string'
-              default: ''
-
-

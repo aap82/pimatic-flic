@@ -58,26 +58,14 @@ module.exports = (env) ->
 
 
     createButtonCallback: (classType) =>
-      return (config) =>
+      return (config, lastState) =>
         {id, bdAddr, daemonID} = config
         if daemonID not in _.keys(@daemons)
           throw new Error "#{daemonID} is an unknown daemon client"
         if bdAddr not in @daemons[daemonID].verifiedButtons
           throw new Error "bdAddr #{bdAddr} not verified on #{@name} daemon"
-
-#        dev = @devices[id]
-#        if dev?
-#          if dev.daemonID isnt daemonID
-#
-#            delete @devices[id]
-#          oldDaemonId = @daemons[dev.d].daemonID
-#          @daemons[oldDaemonId].disconnectButton bdAddr
-##
-##          delete @devices[id]
-
         cc = @channels[bdAddr] or new FlicConnectionChannel(bdAddr)
-
-        button = new classType(config, @, cc)
+        button = new classType(config, @, cc, lastState)
         @channels[bdAddr] = cc
         @devices[id] = button
         @daemons[daemonID]?.connectButton(bdAddr)
