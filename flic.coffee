@@ -5,8 +5,8 @@ module.exports = (env) ->
   paramCase = require 'param-case'
   {FlicConnectionChannel} = require("./lib/fliclibNodeJs")
   FlicDaemon = require('./flic-daemon')(env)
-  FlicButton = require('./device/flic-button')(env)
-  {FlicScanWizardButton, flicScanWizardConfig} = require('./device/flic-scanwizard')(env)
+  FlicButton = require('./devices/flic-button')(env)
+  {FlicScanWizardButton, flicScanWizardConfig} = require('./devices/flic-scanwizard')(env)
   FlicButtonPredicateProvider = require('./predicates/flic-predicates')(env)
 
   checkConfig = (config) ->
