@@ -6,9 +6,14 @@
   "configSchema": "flic-config-schema.coffee",
   "files": [
     "flic.coffee",
+    "flic-daemon.coffee",
     "flic-config-schema.coffee",
+    "device-config-schema.coffee",
     "device/flic-button.coffee",
-    "lib",
+    "device/flic-scanwizard.coffee",
+    "device/flic-predicates.coffee",
+    "lib/fliclibNodeJs.js",
+    "utils",
     "README.md"
 
   ],

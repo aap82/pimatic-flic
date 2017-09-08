@@ -58,3 +58,12 @@ typings/
 .env
 
 /.js/
+.idea/dbnavigator.xml
+.idea/inspectionProfiles/
+.idea/jsLibraryMappings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/pimatic-flic.iml
+.idea/vcs.xml
+.idea/watcherTasks.xml
+.idea/workspace.xml

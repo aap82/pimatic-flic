@@ -1,76 +1,60 @@
 module.exports = (env) ->
   Promise = env.require 'bluebird'
 
-  createButtons = (id) ->
-    return [
-      {text: 'ButtonSingleClick', id: "#{id}-single-click", include: yes}
-      {text: 'ButtonDoubleClick', id: "#{id}-double-click", include: yes}
-      {text: 'ButtonHold',        id: "#{id}-hold",         include: yes}
-      {text: 'ButtonClick',       id: "#{id}-click",        include: no}
-      {text: 'ButtonDown',        id: "#{id}-down",         include: no}
-      {text: 'ButtonUp',          id: "#{id}-up",           include: no}
-    ]
-
-
-  class FlicButton extends env.devices.ButtonsDevice
-    _connection_status: null
+  class FlicButton extends env.devices.Device
     attributes:
       connection_status:
         description: "Button Connection Status"
         label: "Status"
         type: "string"
     getConnection_status: -> Promise.resolve(@_connection_status)
+    @property "daemonID",
+      get: -> @config.daemonID
+      set: (id) -> @config.daemonID = id
 
+    _connection_status: null
+    constructor: (@config, @flic, @channel, isNew=false) ->
+      @id = @config.id
+      @name = @config.name
+      super()
+      @bdAddr = @config.bdAddr
+      @maxTimeDiff = @config.maxTimeDiff
+      @buttons =
+        ButtonSingleClick: "single-clicked"
+        ButtonDoubleClick: "double-clicked"
+        ButtonHold: "held"
+      if @upDown
+        @buttons.ButtonDown = "pressed-down"
+        @buttons.ButtonUp = "released"
+      @events = (val for key, val of @buttons)
+      @listen()
 
-    constructor: (@config, @flic)->
-      {@id, @daemon, @name, @hwAddress, @maxTimeDiff, @connectionOptions} = @config
+    listen: =>
+      @channel.on 'buttonSingleOrDoubleClickOrHold', @flicPressed
+      @channel.on 'buttonUpOrDown', @flicPressed if @upDown
+      @channel.on 'connectionStatusChanged', @connectionStatusChanged
+      return null
+    unListen: =>
+      @channel.removeListener 'buttonSingleOrDoubleClickOrHold', @flicPressed
+      @channel.removeListener 'buttonUpOrDown', @flicPressed if @upDown
+      @channel.removeListener 'connectionStatusChanged', @connectionStatusChanged
+      return null
 
-
-
-      super(@config)
-      console.log "daemon"
-      console.log @daemon
-      @buttons = {}
-      @buttons[b.text] = b.id for b in @config.buttons when b.include
-      @listening = no
-      @listener = null
-
-
-
-    listen: (cc) =>
-      @listening = yes
-      @listener = cc
-      if @buttons['ButtonUp']? or @buttons['ButtonDown']
-        @listener.on 'buttonUpOrDown', @buttonPressed
-      if @buttons['ButtonSingleClick']? or @buttons['ButtonDoubleClick'] or @buttons['ButtonHold']
-        @listener.on 'buttonSingleOrDoubleClickOrHold', @buttonPressed
-      #      if @daemon.debug
-      #        @listener.on "connectionStatusChanged", @connectionStatusChanged
-      @listener.on 'removed', @handleRemoved
-      return
-
-    handleRemoved: (reason) =>
-      console.log reason
-      return if reason is 'RemovedByThisClient'
-      @listening = false
-      return
-
-    buttonPressed: (clickType, wasQueued, timeDiff) =>
-      return unless timeDiff <= @maxTimeDiff and @buttons[clickType]?
-      console.log clickType, wasQueued, timeDiff
-      @_lastPressedButton = @buttons[clickType]
-      @emit 'button', @buttons[clickType]
-      return
+    flicPressed: (clickType, wasQueued, timeDiff) =>
+      console.log @daemonID, @buttons[clickType]
+      return unless  @buttons[clickType]?
+      console.log @daemonID, @buttons[clickType]
+      return unless timeDiff <= @maxTimeDiff
+      console.log @daemonID, @buttons[clickType]
+      @emit @buttons[clickType]
 
     connectionStatusChanged: (status, reason) =>
-      env.logger.info "connectionStatusChanged #{@id} #{status} #{if status is "Disconnected" then " #{reason}" else ""}"
       @_connection_status = status
       @emit 'connection_status', status
-      return
+      return null
 
-
-    destroy: () =>
-      @flic.destroyButton(@)
+    destroy: () ->
+      @unListen()
       super()
 
 
