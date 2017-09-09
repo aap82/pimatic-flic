@@ -17,7 +17,7 @@ module.exports =
           autoReconnect: yes
           autoReconnectInterval: 30
           maxRetries: 1000
-          buttons: []
+          verifiedButtons: []
         properties:
           name:
             description: "Unique Name of this daemon"
