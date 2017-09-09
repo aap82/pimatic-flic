@@ -75,7 +75,7 @@ and through the FlicButton device options, select the daemon to which to connect
 
 ### Predicate Provider
 
-The plugin has a predicate provider that can be used in the rules used in the following form:
+The plugin includes a predicate provider that can be used in the rules used in the following form:
 
     {flic} is {press-type}
     
