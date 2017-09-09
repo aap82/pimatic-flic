@@ -22,15 +22,6 @@ module.exports =
         type: "number"
         required: yes
         default: 3
-      connectionOptions:
-        description: "Connection options for flic button"
-        type: "object"
-        properties:
-          latencyMode:
-            description: "Latency Mode for connection channel"
-            type: "string"
-            default: "NormalLatency"
-            enum: ["HighLatency", "NormalLatency", "LowLatency"]
   FlicScanWizardButton:
       title: "FlicScanWizard"
       type: "object"

@@ -57,6 +57,7 @@ module.exports = (env) ->
         @_connection_status is "BondingKeysMismatch"
             'Press and Hold'
         else status
+      if state is 'Press and Hold' then env.logger.warn "Press and hold #{@id} to reconnect"
       @_connection_status = state
       @emit 'connection_status', state
 

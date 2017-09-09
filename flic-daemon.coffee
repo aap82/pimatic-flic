@@ -28,7 +28,7 @@ module.exports = (env) ->
           @controllerState = info.bluetoothControllerState
           console.log @name, @verifiedButtons, @createdButtons()
           @connectButton(bdAddr) for bdAddr in @createdButtons()
-      @client.on 'close', (errSt) =>
+      @client.on 'close', =>
         @flic.logWarn("#{@name} daemon client connection to flic server closed")
         @client = null
         @connections = []

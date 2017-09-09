@@ -33,7 +33,7 @@ module.exports =
             type: "number"
             required: yes
           autoReconnect:
-            description: "Auto reconnect to daemon after disconnect."
+            description: "Should the plugin attempt to auto-reconnect to daemon after disconnection?"
             type: "boolean"
             required: yes
           autoReconnectInterval:
@@ -41,10 +41,10 @@ module.exports =
             type: "number"
             required: yes
           maxRetries:
-            description: "Maximum number of retries to connect"
+            description: "Maximum number of retries to auto-reconnect before stopping"
             type: "number"
           verifiedButtons:
-            description: "This will be used to store buttons belonging to daemon"
+            description: "Used to store verified buttons belonging to this daemon"
             type: "array"
             items:
               type: "string"
