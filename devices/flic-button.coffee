@@ -47,7 +47,6 @@ module.exports = (env) ->
     flicPressed: (clickType, wasQueued, timeDiff) =>
       return unless  @buttons[clickType]?
       return unless timeDiff <= @maxTimeDiff
-      console.log @daemonID, @buttons[clickType]
       @emit @buttons[clickType]
 
     connectionStatusChanged: (status, reason) =>

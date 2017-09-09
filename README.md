@@ -89,6 +89,17 @@ and, if upDown is enabled, also:
     pressed-down
     released
 
+### rPi
+
+There is an additional folder in the repository called **rpi** which contains a file named **flicd.service**, 
+which is a systemd service unit to enable the daemon on boot.
+
+As written, it assumes the flicd executable is located 
+
+    /home/pi/flic/flicd
+    
+and will start the server listening at 0.0.0.0, allowing external requests. 
+
 
     
       

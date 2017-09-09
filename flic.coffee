@@ -99,7 +99,6 @@ module.exports = (env) ->
 
     logInfo: (str) -> env.logger.info "Flig Plugin: #{str}"
     logWarn: (str) -> env.logger.warn "Flig Plugin: #{str}"
-    logDebug: (str) -> env.logger.debug "Flig Plugin: #{str}"
     logError: (str) -> env.logger.error "Flic Plugin: #{str}"
     connError: ({id, host, port}, error) =>
       if error? and error.code is 'ECONNREFUSED'
