@@ -68,7 +68,7 @@ new buttons to that daemon.
 
 After the pairing process is complete, 
 
-This is _highly discouraged_, BUT, it is possible to pair a single flic with multiple daemons, 
+This is _experimental_ and _highly discouraged_, BUT, it is possible to pair a single flic with multiple daemons, 
 and through the FlicButton device options, select the daemon to which to connect.
 
 
