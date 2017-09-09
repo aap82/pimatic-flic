@@ -57,16 +57,17 @@ Its *highly* encouraged to add flic using Device Discovery.
 |daemon                 |               | **yes**   |Daemon to connect. Auto-populated via discovery
 |bdAddr                 |               | **yes**   |Unique bluetooth mac address. Auto-populated via discovery
 |upDown                 |*false*        | **no**    |Enable listening for button down and up events 
-|maxTimeDiff            |*3*            | **yes**   |Time differ between button push and receive time after which event ignored
+|maxTimeDiff            |*3*            | **yes**   |Time in seconds between button push and receive time after which event ignored
 
 
 ### FlicScanWizardButton
 
-This a button device added automatically at installation, and provides one button for each daemon configured.  
-By using this button, the Flic Daemon selected will be placed into a scanning / pairing mode, that can be used to add
-new buttons to that daemon.
+A button device added automatically at installation, with one button for each daemon listed in plugin config.  
+The Flic Daemon pressed will be placed into scanning/pairing mode for 30 seconds.  During this process, 
+connections to any other daemons will be closed.  
 
-After the pairing process is complete, 
+Follow the onscreen instructions to pair a flic to that daemon.  Once pairing is complete,
+use device discovery to add the newly found flic button to pimatic. 
 
 This is _experimental_ and _highly discouraged_, BUT, it is possible to pair a single flic with multiple daemons, 
 and through the FlicButton device options, select the daemon to which to connect.
