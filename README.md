@@ -54,15 +54,15 @@ Its *highly* encouraged to add flic using Device Discovery.
 
 |Property               | Default       |Required   |Description 
 |:----------------------|:--------------|-----------|:------------------
-|daemon                 |               | **yes**   |Daemon to connect. Auto-populated via discovery.  
-|bdAddr                 |               | **yes**   |Unique bluetooth mac address. Auto-populated via discovery.
+|daemon                 |               | **yes**   |Daemon to connect. Auto-populated via discovery
+|bdAddr                 |               | **yes**   |Unique bluetooth mac address. Auto-populated via discovery
 |upDown                 |*false*        | **no**    |Enable listening for button down and up events 
-|maxTimeDiff            |*3*            | **yes**   |The maximum allowed difference between button push and receive time.
+|maxTimeDiff            |*3*            | **yes**   |Time differ between button push and receive time after which event ignored
 
 
 ### FlicScanWizardButton
 
-This a button device automatically at installation, and populated one button for each daemon listed.  
+This a button device added automatically at installation, and provides one button for each daemon configured.  
 By using this button, the Flic Daemon selected will be placed into a scanning / pairing mode, that can be used to add
 new buttons to that daemon.
 
