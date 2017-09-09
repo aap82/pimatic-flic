@@ -26,17 +26,15 @@ module.exports = (env) ->
           @verifiedButtons = info.bdAddrOfVerifiedButtons
           @spaceAvailable = !info.currentlyNoSpaceForNewConnection
           @controllerState = info.bluetoothControllerState
-          console.log @name, @verifiedButtons, @createdButtons()
           @connectButton(bdAddr) for bdAddr in @createdButtons()
-      @client.on 'close', (errSt) =>
+      @client.on 'close', =>
         @flic.logWarn("#{@name} daemon client connection to flic server closed")
         @client = null
         @connections = []
         @connected = no
         if @config.autoReconnect and @retryCount < @config.maxRetries
-          console.log 'reconnecting'
           @retryCount++
-          @flic.logDebug("#{@name} daemon trying reconnect in #{@config.autoReconnectInterval} seconds")
+#          @flic.logDebug("#{@name} daemon trying reconnect in #{@config.autoReconnectInterval} seconds")
           @reconnectTimeout = setTimeout (()=> @connectToDaemon()), @config.autoReconnectInterval * 1000
 
     constructor: (@config, @flic) ->
@@ -79,7 +77,7 @@ module.exports = (env) ->
           @flic.logInfo 'Your button is private. Hold down for 7 seconds to make it public.'
         wizard.on 'foundPublicButton', (bdAddr, name) =>
           @flic.logInfo 'Found public button ' + bdAddr + ' (' + name + '). Now connecting...'
-        wizard.on 'buttonConnected', (bdAddr, name) =>
+        wizard.on 'buttonConnected', (bdAddr) =>
           @flic.logInfo "Button #{bdAddr} connected. Now verifying and pairing..."
         wizard.on 'completed', (result, bdAddr) =>
           @scanning = no

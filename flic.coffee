@@ -5,8 +5,8 @@ module.exports = (env) ->
   paramCase = require 'param-case'
   {FlicConnectionChannel} = require("./lib/fliclibNodeJs")
   FlicDaemon = require('./flic-daemon')(env)
-  FlicButton = require('./device/flic-button')(env)
-  {FlicScanWizardButton, flicScanWizardConfig} = require('./device/flic-scanwizard')(env)
+  FlicButton = require('./devices/flic-button')(env)
+  {FlicScanWizardButton, flicScanWizardConfig} = require('./devices/flic-scanwizard')(env)
   FlicButtonPredicateProvider = require('./predicates/flic-predicates')(env)
 
   checkConfig = (config) ->
@@ -99,7 +99,6 @@ module.exports = (env) ->
 
     logInfo: (str) -> env.logger.info "Flig Plugin: #{str}"
     logWarn: (str) -> env.logger.warn "Flig Plugin: #{str}"
-    logDebug: (str) -> env.logger.debug "Flig Plugin: #{str}"
     logError: (str) -> env.logger.error "Flic Plugin: #{str}"
     connError: ({id, host, port}, error) =>
       if error? and error.code is 'ECONNREFUSED'
