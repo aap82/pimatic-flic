@@ -23,7 +23,7 @@ module.exports = (env) ->
   class FlicButtonPredicateProvider extends env.predicates.PredicateProvider
     presets: [{
       name: "flic button"
-      input: "{flic} is {type}"
+      input: "{flic} is {press-type}"
     }]
 
     constructor: (@framework) ->
@@ -40,7 +40,7 @@ module.exports = (env) ->
           eventTypes.push [type: t, t] for t in matchFlic.events
           m = next
       m = m.match(' is ')
-      m = m.match(eventTypes, type: 'select', wildcard: "{type}", ((m, {type}) => matchEvent = type))
+      m = m.match(eventTypes, type: 'select', wildcard: "{press-type}", ((m, {type}) => matchEvent = type))
       if m.hadMatch()
         match = m.getFullMatch()
         return {
