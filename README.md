@@ -23,10 +23,10 @@ From the root of your pimatic-app installation folder
 ## Plugin Configuration
 
 |Property   | *Defaults* | Description 
-|:----------|:-----------|:------------
-|**host** | *localhost* | You can also connect to remote ip addresses
-|**port** | *5551* | The port to connect to
-|**autoReconnect**| *true* | Enable auto-reconnection to flic deamon
+|:---------------|:-----------|:----------------------------
+|host | *localhost* | You can also connect to remote ip addresses
+|port | *5551* | The port to connect to
+|autoReconnect| *true* | Enable auto-reconnection to flic deamon
 
 
 
