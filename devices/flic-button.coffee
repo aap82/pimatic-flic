@@ -7,12 +7,14 @@ module.exports = (env) ->
         description: "Button Connection Status"
         label: "Status"
         type: "string"
-    getConnection_status: -> Promise.resolve(@_connection_status)
+    
     @property "daemonID",
       get: -> @config.daemonID
       set: (id) -> @config.daemonID = id
 
     _connection_status: null
+    getConnection_status: -> Promise.resolve(@_connection_status)
+    
     constructor: (@config, @flic, @channel, lastState) ->
       @_connection_status = lastState?.connection_status?.value or null
       @id = @config.id
