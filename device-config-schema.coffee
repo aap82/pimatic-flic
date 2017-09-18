@@ -9,19 +9,19 @@ module.exports =
         type: "string"
         default: 'none'
         required: yes
-      bdAddr:
-        description: "The mac address of the flic button"
-        type: "string"
-        required: yes
       upDown:
         description: "Listen for Button Down and Up Events"
         type: "boolean"
         default: no
       maxTimeDiff:
-        description:"The maximum allowed difference between button push and receive time."
+        description:"The maximum allowed difference between button push and receive time (in seconds)"
         type: "number"
         required: yes
         default: 3
+      bdAddr:
+        description: "The mac address of the flic button"
+        type: "string"
+        required: yes
   FlicScanWizardButton:
       title: "FlicScanWizard"
       type: "object"
@@ -35,10 +35,8 @@ module.exports =
             type: "object"
             properties:
               id:
-                description: 'Button Id'
+                description: 'The id of the flic daemon client'
                 type: 'string'
-                default: ''
               text:
-                description: 'Button Id'
+                description: 'The name of the flic daemon client'
                 type: 'string'
-                default: ''

@@ -34,7 +34,6 @@ module.exports = (env) ->
         @connected = no
         if @config.autoReconnect and @retryCount < @config.maxRetries
           @retryCount++
-#          @flic.logDebug("#{@name} daemon trying reconnect in #{@config.autoReconnectInterval} seconds")
           @reconnectTimeout = setTimeout (()=> @connectToDaemon()), @config.autoReconnectInterval * 1000
 
     constructor: (@config, @flic) ->
@@ -56,7 +55,6 @@ module.exports = (env) ->
         @channels.push bdAddr if bdAddr not in @channels
       return null
 
-
     disconnectButton: (bdAddr) =>
       return unless @client?
       if @flic.channels[bdAddr]?
@@ -69,7 +67,7 @@ module.exports = (env) ->
         return reject("Not connected to #{@name} daemon. Try again later") unless @client and @connected
         return reject("#{@name} daemon already scanning") if @scanning
         daemon.client?.close() for id, daemon of @flic.daemons when id isnt @id
-        @flic.logInfo "#{@name} daemon scan wizard ready.  Press your Flic button to add it."
+        @flic.logInfo "#{@name} daemon scan wizard enabled for next 30 seconds. Press your Flic button to add it."
         @scanning = yes
         wizard = new FlicScanWizard()
         timeoutId = setTimeout (() => @client.cancelScanWizard(wizard)), timeout

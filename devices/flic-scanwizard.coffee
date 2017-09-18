@@ -5,7 +5,6 @@ module.exports = (env) ->
     name: 'Flic Scan Wizard'
     class: 'FlicScanWizard'
 
-
   class FlicScanWizardButton extends env.devices.Device
     actions:
       buttonPressed:
