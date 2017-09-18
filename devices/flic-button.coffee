@@ -9,11 +9,11 @@ module.exports = (env) ->
         type: "string"
     _connection_status: null
     getConnection_status: -> Promise.resolve(@_connection_status)
-
+    
     @property "daemonID",
       get: -> @config.daemonID
       set: (id) -> @config.daemonID = id
-
+      
     constructor: (@config, @flic, @channel, lastState) ->
       @_connection_status = lastState?.connection_status?.value or null
       @id = @config.id
@@ -63,5 +63,5 @@ module.exports = (env) ->
     destroy: () ->
       @unListen()
       super()
-
+      
   return FlicButton
