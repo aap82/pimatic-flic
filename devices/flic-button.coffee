@@ -2,13 +2,14 @@ module.exports = (env) ->
   Promise = env.require 'bluebird'
 
   class FlicButton extends env.devices.Device
-    _connection_status: null
     attributes:
       connection_status:
         description: "Button Connection Status"
         label: "Status"
         type: "string"
+    _connection_status: null
     getConnection_status: -> Promise.resolve(@_connection_status)
+
     @property "daemonID",
       get: -> @config.daemonID
       set: (id) -> @config.daemonID = id
