@@ -1,6 +1,6 @@
 {
   "name": "pimatic-flic",
-  "version": "0.2.0",
+  "version": "1.1.0",
   "description": "Pimatic Plugin for Flic Buttons",
   "main": "flic",
   "configSchema": "flic-config-schema.coffee",
