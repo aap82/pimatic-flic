@@ -46,7 +46,7 @@ module.exports = (env) ->
         return {
           token: match
           nextInput: input.substring(match.length)
-          predicateHandler: new FlicButtonPredicateHandler(this, matchFlic, matchEvent)
+          predicateHandler: new FlicButtonPredicateHandler(@, matchFlic, matchEvent)
         }
       return null
 

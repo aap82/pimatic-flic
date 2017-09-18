@@ -56,7 +56,6 @@ module.exports = (env) ->
       @framework.deviceManager.on "deviceRemoved", @deviceRemoved
       @framework.deviceManager.on "discover", @discover
 
-
     createButtonCallback: (classType) =>
       return (config, lastState) =>
         {id, bdAddr, daemonID} = config
@@ -84,6 +83,7 @@ module.exports = (env) ->
         device.daemonID = daemonID
         @framework.deviceManager.recreateDevice(device, device.config)
       return
+
     discover: =>
       return new Promise (resolve) =>
         createdFlics = (btn.bdAddr for key, btn of @devices)
@@ -99,7 +99,6 @@ module.exports = (env) ->
 
     logInfo: (str) -> env.logger.info "Flig Plugin: #{str}"
     logWarn: (str) -> env.logger.warn "Flig Plugin: #{str}"
-    logError: (str) -> env.logger.error "Flic Plugin: #{str}"
     connError: ({id, host, port}, error) =>
       if error? and error.code is 'ECONNREFUSED'
         env.logger.error "Flic: daemon #{id} connection failed to #{host}:#{port}"
